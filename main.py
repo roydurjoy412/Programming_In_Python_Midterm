@@ -47,7 +47,7 @@ class Storage:
             with open(self.filename, 'r') as file:
                 data = json.load(file)
                 return [Entry.from_dict(d) for d in data]
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, ValueError):
             return []
         
 class BudgetManager:
@@ -79,9 +79,9 @@ class BudgetManager:
         if new_amount is not None:
             entry.amount = float(new_amount)
         if new_category is not None:
-            entry.category = new_category
+            entry.category = new_category.strip()
         if new_note is not None:
-            entry.note = new_note
+            entry.note = new_note.strip()
             
         self.storage.save_data(self.entries)
         return True
@@ -95,3 +95,54 @@ class BudgetManager:
             self.storage.save_data(self.entries)
             return True
         return False
+    
+    def search_by_category(self, search_term):
+        results = []
+        for e in self.entries:
+            if search_term.lower() in e.category.lower():
+                results.append(e)
+        return results
+
+    def sort_entries(self, by="date", reverse=True):
+        if by == "amount":
+            return sorted(self.entries, key=lambda x: x.amount, reverse=reverse)
+        return sorted(self.entries, key=lambda x: x.date, reverse=reverse)
+    
+    def get_monthly_summary(self, year, month):
+        total_income = 0
+        total_expense = 0
+        category_totals = {}
+
+        for e in self.entries:
+            try: 
+                entry_year, entry_month, _ = e.date.split("-")
+                
+                if int(entry_year) == year and int(entry_month) == month:
+                    if e.type == "income":
+                        total_income += e.amount
+                    else:
+                        total_expense += e.amount
+                        if e.category not in category_totals:
+                            category_totals[e.category] = 0
+                        category_totals[e.category] += e.amount
+            except ValueError:
+                continue 
+
+        balance = total_income - total_expense
+
+        warning = None
+        if total_income > 0:
+            if total_expense / total_income >= 0.8:
+                warning = "Warning: You have spent 80% or more of your income this month!"
+
+        top_category = None
+        if category_totals:
+            top_category = max(category_totals, key=category_totals.get)
+
+        return {
+            "income": total_income,
+            "expense": total_expense,
+            "balance": balance,
+            "top_category": top_category,
+            "warning": warning
+        }
