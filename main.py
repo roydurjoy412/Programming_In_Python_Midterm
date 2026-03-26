@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import date
 
 class Entry:
@@ -30,3 +31,21 @@ class Entry:
             data["note"], 
             data["date"]
         )
+    
+class Storage:
+    def __init__(self, filename="budget_data.json"):
+        self.filename = filename
+
+    def save_data(self, entries):
+        with open(self.filename, 'w') as file:
+            json.dump([e.to_dict() for e in entries], file, indent=4)
+
+    def load_data(self):
+        if not os.path.exists(self.filename):
+            return []
+        try:
+            with open(self.filename, 'r') as file:
+                data = json.load(file)
+                return [Entry.from_dict(d) for d in data]
+        except (json.JSONDecodeError, KeyError):
+            return []
