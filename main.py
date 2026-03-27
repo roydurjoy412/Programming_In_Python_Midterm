@@ -285,10 +285,83 @@ class BudgetCLI:
         input("\nPress any key to return to the main menu...")
 
     def handle_edit(self):
-        pass
+        self.console.print("\n[bold cyan]--- Edit Entry ---[/bold cyan]")
+        
+        if not self.manager.get_all_entries():
+            self.console.print("No entries found.", style="bold yellow")
+            return
+            
+        self.handle_view()
+        
+        while True:
+            id_input = input("\nEnter the ID to edit (or 'back' to cancel): ").strip()
+            if id_input.lower() == "back":
+                return
+            try:
+                entry_id = int(id_input)
+                entry = self.manager.find_entry(entry_id)
+                if entry:
+                    break
+                self.console.print(f"No entry found with ID {entry_id}.", style="bold red")
+            except ValueError:
+                self.console.print("Invalid ID. Please enter a number.", style="bold red")
+                
+        self.console.print(f"\nCurrent details:", style="dim")
+        self.console.print(f"  Amount: ৳{entry.amount:.2f}", style="dim")
+        self.console.print(f"  Category: {entry.category}", style="dim")
+        self.console.print(f"  Note: {entry.note if entry.note else '-'}", style="dim")
+        self.console.print("(Press Enter to keep current value)", style="dim")
+        
+        new_amount = None
+        while True:
+            amount_input = input("New amount (৳): ").strip()
+            if not amount_input:
+                break
+            try:
+                new_amount = float(amount_input)
+                if new_amount > 0:
+                    break
+                self.console.print("Amount must be greater than 0.", style="bold red")
+            except ValueError:
+                self.console.print("Invalid amount. Please enter a valid number.", style="bold red")
+                
+        category_input = input("New category: ").strip().lower()
+        new_category = category_input if category_input else None
+        
+        note_input = input("New note: ").strip()
+        new_note = note_input if note_input else None
+        
+        self.manager.update_entry(entry_id, new_amount, new_category, new_note)
+        self.console.print("\nEntry updated successfully!", style="bold green")
 
     def handle_delete(self):
-        pass
+        self.console.print("\n[bold cyan]--- Delete Entry ---[/bold cyan]")
+        
+        if not self.manager.get_all_entries():
+            self.console.print("No entries found.", style="bold yellow")
+            return
+            
+        self.handle_view()
+        
+        while True:
+            id_input = input("\nEnter the ID to delete (or 'back' to cancel): ").strip()
+            if id_input.lower() == "back":
+                return
+            try:
+                entry_id = int(id_input)
+                entry = self.manager.find_entry(entry_id)
+                if entry:
+                    break
+                self.console.print(f"No entry found with ID {entry_id}.", style="bold red")
+            except ValueError:
+                self.console.print("Invalid ID. Please enter a number.", style="bold red")
+                
+        confirm = input(f"Are you sure you want to delete entry {entry_id}? (y/n): ").strip().lower()
+        if confirm == 'y':
+            self.manager.delete_entry(entry_id)
+            self.console.print("\nEntry deleted successfully!", style="bold green")
+        else:
+            self.console.print("\nDeletion cancelled.", style="bold yellow")
 
     def handle_search(self):
         pass
