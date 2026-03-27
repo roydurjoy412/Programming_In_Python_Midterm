@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date
+from datetime import date, datetime
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -196,10 +196,93 @@ class BudgetCLI:
                 self.console.print("[bold red]Invalid choice. Please enter a number between 1 and 8.[/bold red]")
 
     def handle_add(self):
-        pass
+        self.console.print("\n[bold cyan]--- Add New Entry ---[/bold cyan]")
+
+        while True:
+            entry_type = input("Type (income/expense): ").strip().lower()
+            if entry_type in ["income", "expense"]:
+                break
+            self.console.print("Invalid type! Please enter 'income' or 'expense'.", style="bold red")
+
+        while True:
+            try:
+                amount = float(input("Amount (৳): ").strip())
+                if amount > 0:
+                    break
+                self.console.print("Amount must be greater than 0.", style="bold red")
+            except ValueError:
+                self.console.print("Invalid amount! Please enter a valid number.", style="bold red")
+
+        if entry_type == "income":
+            self.console.print("Hint: allowance, tuition, gift, freelance, etc.", style="dim")
+        else:
+            self.console.print("Hint: food, transport, photocopy, recharge, etc.", style="dim")
+
+        while True:
+            category = input("Category: ").strip().lower()
+            if category:
+                break
+            self.console.print("Category cannot be empty.", style="bold red")
+
+        note = input("Note (optional): ").strip()
+
+        while True:
+            date_input = input("Date (YYYY-MM-DD, press Enter for today): ").strip()
+            if not date_input:
+                entry_date = None
+                break
+            
+            parts = date_input.split("-")
+            if len(parts) == 3 and all(p.isdigit() for p in parts):
+                try:
+                    datetime.strptime(date_input, "%Y-%m-%d")
+                    entry_date = date_input
+                    break
+                except ValueError:
+                    self.console.print("Invalid date! Please enter a real calendar date.", style="bold red")
+            else:
+                self.console.print("Invalid format! Please use YYYY-MM-DD (e.g., 2026-03-28).", style="bold red")
+
+        new_id = self.manager.add_entry(entry_type, amount, category, note, entry_date)
+        self.console.print(f"\n Entry added successfully! ID: {new_id}", style="bold green")
 
     def handle_view(self):
-        pass
+        self.console.print("\n[bold cyan]--- All Entries ---[/bold cyan]")
+        
+        entries = self.manager.get_all_entries()
+        
+        if not entries:
+            self.console.print("No entries found. Add some entries first.", style="bold yellow")
+            return
+        
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("ID", width=5, justify="right")
+        table.add_column("Type", width=10, justify="center")
+        table.add_column("Amount (৳)", width=12, justify="right")
+        table.add_column("Category", width=15)
+        table.add_column("Note", width=20)
+        table.add_column("Date", width=12, justify="center")
+        
+        for e in entries:
+            if e.type == "income":
+                type_color = "[bold green]Income[/bold green]"
+                amount_color = f"[bold green]+{e.amount:.2f}[/bold green]"
+            else:
+                type_color = "[bold red]Expense[/bold red]"
+                amount_color = f"[bold red]-{e.amount:.2f}[/bold red]"
+            
+            table.add_row(
+                str(e.id),
+                type_color,
+                amount_color,
+                e.category.title(),
+                e.note if e.note else "-",
+                e.date
+            )
+        
+        self.console.print(table)
+        self.console.print(f"Total entries: {len(entries)}", style="dim")
+        input("\nPress any key to return to the main menu...")
 
     def handle_edit(self):
         pass
