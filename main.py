@@ -364,13 +364,52 @@ class BudgetCLI:
             self.console.print("\nDeletion cancelled.", style="bold yellow")
 
     def handle_search(self):
-        pass
-
-    def handle_sort(self):
-        pass
-
-    def handle_monthly_report(self):
-        pass
+        
+        self.console.print("\n[bold cyan]--- Search by Category ---[/bold cyan]")
+        
+        if not self.manager.get_all_entries():
+            self.console.print("No entries found.", style="bold yellow")
+            return
+        
+        search_term = input("Enter category to search (or press Enter to cancel): ").strip().lower()
+        if not search_term:
+            return
+        
+        results = self.manager.search_by_category(search_term)
+        
+        if not results:
+            self.console.print(f"No entries found for '{search_term}'.", style="bold yellow")
+            return
+        
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("ID", width=5, justify="right")
+        table.add_column("Type", width=10, justify="center")
+        table.add_column("Amount (৳)", width=12, justify="right")
+        table.add_column("Category", width=15)
+        table.add_column("Note", width=20)
+        table.add_column("Date", width=12, justify="center")
+        
+        for e in results:
+            if e.type == "income":
+                type_color = "[bold green]Income[/bold green]"
+                amount_color = f"[bold green]+{e.amount:.2f}[/bold green]"
+            else:
+                type_color = "[bold red]Expense[/bold red]"
+                amount_color = f"[bold red]-{e.amount:.2f}[/bold red]"
+            
+            table.add_row(
+                str(e.id),
+                type_color,
+                amount_color,
+                e.category.title(),
+                e.note if e.note else "-",
+                e.date
+            )
+        
+        self.console.print(table)
+        self.console.print(f"Found {len(results)} result(s) for '{search_term}'.", style="dim")
+    
+    
 
 
 if __name__ == "__main__":
