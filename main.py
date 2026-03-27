@@ -1,6 +1,9 @@
 import json
 import os
 from datetime import date
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 
 class Entry:
     def __init__(self, entry_id, entry_type, amount, category, note, entry_date=None):
@@ -146,3 +149,76 @@ class BudgetManager:
             "top_category": top_category,
             "warning": warning
         }
+    
+class BudgetCLI:
+    
+    def __init__(self, manager):
+        self.manager = manager
+        self.console = Console() 
+
+    def show_menu(self):
+        self.console.print("\n[bold magenta]--- Menu ---[/bold magenta]")
+        self.console.print("[bold yellow]1.[/bold yellow] Add new entry")
+        self.console.print("[bold yellow]2.[/bold yellow] View all entries")
+        self.console.print("[bold yellow]3.[/bold yellow] Edit an entry")
+        self.console.print("[bold yellow]4.[/bold yellow] Delete an entry")
+        self.console.print("[bold yellow]5.[/bold yellow] Search by category")
+        self.console.print("[bold yellow]6.[/bold yellow] Sort entries")
+        self.console.print("[bold yellow]7.[/bold yellow] Monthly summary report")
+        self.console.print("[bold red]8.[/bold red] Exit")
+        self.console.print("[bold magenta]-----------------------------[/bold magenta]")
+
+    def run(self):
+       
+        self.console.print(Panel("Welcome to Student Budget Tracker", style="bold green"))
+        while True:
+            self.show_menu()
+            choice = input("\nEnter your choice (1-8): ").strip()
+
+            if choice == "1":
+                self.handle_add()
+            elif choice == "2":
+                self.handle_view()
+            elif choice == "3":
+                self.handle_edit()
+            elif choice == "4":
+                self.handle_delete()
+            elif choice == "5":
+                self.handle_search()
+            elif choice == "6":
+                self.handle_sort()
+            elif choice == "7":
+                self.handle_monthly_report()
+            elif choice == "8":
+                self.console.print("\n[bold green]Thanks for using Budget Tracker! Keep tracking your money.[/bold green]\n")
+                break
+            else:
+                self.console.print("[bold red]Invalid choice. Please enter a number between 1 and 8.[/bold red]")
+
+    def handle_add(self):
+        pass
+
+    def handle_view(self):
+        pass
+
+    def handle_edit(self):
+        pass
+
+    def handle_delete(self):
+        pass
+
+    def handle_search(self):
+        pass
+
+    def handle_sort(self):
+        pass
+
+    def handle_monthly_report(self):
+        pass
+
+
+if __name__ == "__main__":
+    storage = Storage("budget_data.json")
+    manager = BudgetManager(storage)
+    app = BudgetCLI(manager)
+    app.run()
