@@ -410,7 +410,7 @@ class BudgetCLI:
         self.console.print(f"Found {len(results)} result(s) for '{search_term}'.", style="dim")
     
     
-def handle_sort(self):
+    def handle_sort(self):
         self.console.print("\n[bold cyan]--- Sort Entries ---[/bold cyan]")
         
         if not self.manager.get_all_entries():
@@ -471,6 +471,55 @@ def handle_sort(self):
         
         self.console.print(table)
 
+    def handle_monthly_report(self):
+
+        self.console.print("\n[bold cyan]--- Monthly Summary Report ---[/bold cyan]")
+        
+        if not self.manager.get_all_entries():
+            self.console.print("No entries found.", style="bold yellow")
+            return
+        
+        while True:
+            year_input = input("Enter year (e.g. 2026) or 'back': ").strip()
+            if year_input.lower() == "back":
+                return
+            if year_input.isdigit() and len(year_input) == 4:
+                year = int(year_input)
+                break
+            self.console.print("Invalid year. Please enter a 4-digit year.", style="bold red")
+        
+        while True:
+            month_input = input("Enter month (1-12) or 'back': ").strip()
+            if month_input.lower() == "back":
+                return
+            if month_input.isdigit() and 1 <= int(month_input) <= 12:
+                month = int(month_input)
+                break
+            self.console.print("Invalid month. Please enter a number between 1 and 12.", style="bold red")
+        
+        summary = self.manager.get_monthly_summary(year, month)
+        
+        if summary["income"] == 0 and summary["expense"] == 0:
+            self.console.print(f"No entries found for {year}-{month:02d}.", style="bold yellow")
+            return
+        
+        balance_style = "bold green" if summary["balance"] >= 0 else "bold red"
+        
+        self.console.print(Panel(
+            f"[bold]Year:[/bold] {year}   [bold]Month:[/bold] {month:02d}",
+            style="cyan",
+            expand=False
+        ))
+        
+        self.console.print(f"  Total Income   : [bold green]৳{summary['income']:.2f}[/bold green]")
+        self.console.print(f"  Total Expense  : [bold red]৳{summary['expense']:.2f}[/bold red]")
+        self.console.print(f"  Net Balance    : [{balance_style}]৳{summary['balance']:.2f}[/{balance_style}]")
+        
+        if summary["top_category"]:
+            self.console.print(f"  Top Category   : [bold yellow]{summary['top_category'].title()}[/bold yellow]")
+        
+        if summary["warning"]:
+            self.console.print(f"\n[bold red]{summary['warning']}[/bold red]")
 
 
 if __name__ == "__main__":
