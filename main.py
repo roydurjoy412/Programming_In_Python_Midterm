@@ -6,6 +6,10 @@ from rich.table import Table
 from rich.panel import Panel
 
 class Entry:
+    """
+    Represents a single budget entry - either income or expense.
+    Each entry has an ID, type, amount, category, note, and date.
+    """
     def __init__(self, entry_id, entry_type, amount, category, note, entry_date=None):
         self.id = entry_id
         self.type = entry_type
@@ -36,6 +40,10 @@ class Entry:
         )
     
 class Storage:
+    """
+    Handles reading and writing budget data to a JSON file.
+    If the file doesn't exist, it starts fresh with an empty list.
+    """
     def __init__(self, filename="budget_data.json"):
         self.filename = filename
 
@@ -54,11 +62,16 @@ class Storage:
             return []
         
 class BudgetManager:
+    """
+    Manages all budget entries and contains the main business logic.
+    Uses the Storage class to save and load data.
+    """
     def __init__(self, storage):
         self.storage = storage
         self.entries = self.storage.load_data()
 
     def add_entry(self, entry_type, amount, category, note, entry_date):
+        """Adds a new income or expense entry and saves it to the file."""
         new_id = max((e.id for e in self.entries), default=0) + 1
         new_entry = Entry(new_id, entry_type, amount, category, note, entry_date)
         self.entries.append(new_entry)
@@ -90,6 +103,9 @@ class BudgetManager:
         return True
 
     def delete_entry(self, entry_id):
+        
+        """Deletes an entry by ID. Returns True if deleted, False if not found."""
+        
         entry_id = int(entry_id)
         original_count = len(self.entries)
         self.entries = [e for e in self.entries if e.id != entry_id]
@@ -100,6 +116,9 @@ class BudgetManager:
         return False
     
     def search_by_category(self, search_term):
+        
+        """Returns all entries where the category contains the search term. Search is case-insensitive."""
+ 
         results = []
         for e in self.entries:
             if search_term.lower() in e.category.lower():
@@ -112,6 +131,10 @@ class BudgetManager:
         return sorted(self.entries, key=lambda x: x.date, reverse=reverse)
     
     def get_monthly_summary(self, year, month):
+        
+        """Calculates total income, expense, balance and top spending category for a given month. 
+        Also checks for budget warning."""
+    
         total_income = 0
         total_expense = 0
         category_totals = {}
@@ -136,7 +159,9 @@ class BudgetManager:
         warning = None
         if total_income > 0:
             if total_expense / total_income >= 0.8:
-                warning = "Warning: You have spent 80% or more of your income this month!"
+                warning = "Warning: You have spent 80% or more of your income!"
+        elif total_expense > 0:
+            warning = "Warning: You have expenses but no income recorded this month!"
 
         top_category = None
         if category_totals:
@@ -151,7 +176,10 @@ class BudgetManager:
         }
     
 class BudgetCLI:
-    
+    """
+    Handles the user interface - shows the menu and takes user input.
+    Uses BudgetManager to perform the actual operations.
+    """   
     def __init__(self, manager):
         self.manager = manager
         self.console = Console() 
@@ -169,7 +197,6 @@ class BudgetCLI:
         self.console.print("[bold magenta]-----------------------------[/bold magenta]")
 
     def run(self):
-       
         self.console.print(Panel("Welcome to Student Budget Tracker", style="bold green"))
         while True:
             self.show_menu()
@@ -199,11 +226,13 @@ class BudgetCLI:
         self.console.print("\n[bold cyan]--- Add New Entry ---[/bold cyan]")
 
         while True:
-            entry_type = input("Type (income/expense): ").strip().lower()
+            entry_type = input("Type (income/expense or 'back' to cancel): ").strip().lower()
+            if entry_type == "back":
+                return
             if entry_type in ["income", "expense"]:
                 break
             self.console.print("Invalid type! Please enter 'income' or 'expense'.", style="bold red")
-
+        
         while True:
             try:
                 amount = float(input("Amount (৳): ").strip())
@@ -245,7 +274,6 @@ class BudgetCLI:
 
         new_id = self.manager.add_entry(entry_type, amount, category, note, entry_date)
         self.console.print(f"\n Entry added successfully! ID: {new_id}", style="bold green")
-
     def handle_view(self):
         self.console.print("\n[bold cyan]--- All Entries ---[/bold cyan]")
         
@@ -282,7 +310,6 @@ class BudgetCLI:
         
         self.console.print(table)
         self.console.print(f"Total entries: {len(entries)}", style="dim")
-        input("\nPress any key to return to the main menu...")
 
     def handle_edit(self):
         self.console.print("\n[bold cyan]--- Edit Entry ---[/bold cyan]")
@@ -422,10 +449,13 @@ class BudgetCLI:
         self.console.print("[bold yellow]3.[/bold yellow] Sort by date (newest first)")
         self.console.print("[bold yellow]4.[/bold yellow] Sort by date (oldest first)")
         
-        choice = input("\nEnter your choice (or press Enter to cancel): ").strip()
-        
-        if not choice:
-            return
+        while True:
+            choice = input("\nEnter your choice (1-4, or 'back' to cancel): ").strip()
+            if choice.lower() == "back":
+                return
+            if choice in ["1", "2", "3", "4"]:
+                break
+            self.console.print("Invalid choice. Please enter 1-4.", style="bold red")
         
         if choice == "1":
             sorted_entries = self.manager.sort_entries(by="amount", reverse=True)
@@ -439,9 +469,7 @@ class BudgetCLI:
         elif choice == "4":
             sorted_entries = self.manager.sort_entries(by="date", reverse=False)
             label = "Date (Oldest First)"
-        else:
-            self.console.print("Invalid choice.", style="bold red")
-            return
+       
         
         self.console.print(f"\n[bold cyan]Sorted by: {label}[/bold cyan]")
         table = Table(show_header=True, header_style="bold cyan")
