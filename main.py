@@ -410,6 +410,67 @@ class BudgetCLI:
         self.console.print(f"Found {len(results)} result(s) for '{search_term}'.", style="dim")
     
     
+def handle_sort(self):
+        self.console.print("\n[bold cyan]--- Sort Entries ---[/bold cyan]")
+        
+        if not self.manager.get_all_entries():
+            self.console.print("No entries found.", style="bold yellow")
+            return
+        
+        self.console.print("[bold yellow]1.[/bold yellow] Sort by amount (high to low)")
+        self.console.print("[bold yellow]2.[/bold yellow] Sort by amount (low to high)")
+        self.console.print("[bold yellow]3.[/bold yellow] Sort by date (newest first)")
+        self.console.print("[bold yellow]4.[/bold yellow] Sort by date (oldest first)")
+        
+        choice = input("\nEnter your choice (or press Enter to cancel): ").strip()
+        
+        if not choice:
+            return
+        
+        if choice == "1":
+            sorted_entries = self.manager.sort_entries(by="amount", reverse=True)
+            label = "Amount (High to Low)"
+        elif choice == "2":
+            sorted_entries = self.manager.sort_entries(by="amount", reverse=False)
+            label = "Amount (Low to High)"
+        elif choice == "3":
+            sorted_entries = self.manager.sort_entries(by="date", reverse=True)
+            label = "Date (Newest First)"
+        elif choice == "4":
+            sorted_entries = self.manager.sort_entries(by="date", reverse=False)
+            label = "Date (Oldest First)"
+        else:
+            self.console.print("Invalid choice.", style="bold red")
+            return
+        
+        self.console.print(f"\n[bold cyan]Sorted by: {label}[/bold cyan]")
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("ID", width=5, justify="right")
+        table.add_column("Type", width=10, justify="center")
+        table.add_column("Amount (৳)", width=12, justify="right")
+        table.add_column("Category", width=15)
+        table.add_column("Note", width=20)
+        table.add_column("Date", width=12, justify="center")
+        
+        for e in sorted_entries:
+            if e.type == "income":
+                type_color = "[bold green]Income[/bold green]"
+                amount_color = f"[bold green]+{e.amount:.2f}[/bold green]"
+            else:
+                type_color = "[bold red]Expense[/bold red]"
+                amount_color = f"[bold red]-{e.amount:.2f}[/bold red]"
+            
+            table.add_row(
+                str(e.id),
+                type_color,
+                amount_color,
+                e.category.title(),
+                e.note if e.note else "-",
+                e.date
+            )
+        
+        self.console.print(table)
+
 
 
 if __name__ == "__main__":
