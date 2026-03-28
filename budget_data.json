@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "type": "income",
+        "amount": 6000.0,
+        "category": "tuition",
+        "note": "",
+        "date": "2026-03-28"
+    },
+    {
+        "id": 2,
+        "type": "income",
+        "amount": 1000.0,
+        "category": "gift",
+        "note": "from friend",
+        "date": "2026-03-28"
+    },
+    {
+        "id": 3,
+        "type": "expense",
+        "amount": 4500.0,
+        "category": "other",
+        "note": "",
+        "date": "2026-03-28"
+    },
+    {
+        "id": 4,
+        "type": "income",
+        "amount": 10000.0,
+        "category": "allowance",
+        "note": "",
+        "date": "2026-03-28"
+    },
+    {
+        "id": 5,
+        "type": "expense",
+        "amount": 2000.0,
+        "category": "food",
+        "note": "",
+        "date": "2026-03-20"
+    },
+    {
+        "id": 6,
+        "type": "expense",
+        "amount": 11000.0,
+        "category": "rent",
+        "note": "",
+        "date": "2026-03-28"
+    }
+]
